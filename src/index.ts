@@ -287,8 +287,6 @@ export async function toolsProvider(ctl: ToolsProviderController) {
 				url.searchParams.append("format", "json");
 				url.searchParams.append("safesearch", safeSearch.toString());
 
-				console.log(url.toString());
-
 				const response = await fetch(url.toString());
 				if (!response.ok) {
 					return `Failed to make request: ${response.statusText}`;
