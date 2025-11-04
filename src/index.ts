@@ -15,10 +15,10 @@ export async function main(context: PluginContext) {
 
 export const configSchema = createConfigSchematics()
 	.field(
-		"baseURL",
+		"baseSearchURL",
 		"string",
 		{
-			displayName: "Base URL",
+			displayName: "Base Search URL",
 			hint: "The base URL to use for the search engine.",
 		},
 		"http://localhost/search",
@@ -28,7 +28,12 @@ export const configSchema = createConfigSchematics()
 		"numeric",
 		{
 			displayName: "Max Results",
-			hint: "The maximum number of results to return.",
+			hint: "The maximum number of search results to return.\n\n0 = Unlimited",
+			slider: {
+				min: 0,
+				max: 50,
+				step: 1,
+			}
 		},
 		5,
 	)
@@ -47,15 +52,15 @@ export const configSchema = createConfigSchematics()
 		{
 			displayName: "Language",
 			hint: "The language to search in.",
-			options: ["en-US"], // TODO: add the others
+			options: ["af", "ar", "ar-SA", "be", "bg", "bg-BG", "ca", "cs", "cs-CZ", "cy", "da", "da-DK", "de", "de-AT", "de-BE", "de-CH", "de-DE", "el", "el-GR", "en", "en-AU", "en-CA", "en-GB", "en-IE", "en-IN", "en-NZ", "en-PH", "en-PK", "en-SG", "en-US", "en-ZA", "es", "es-AR", "es-CL", "es-CO", "es-ES", "es-MX", "es-PE", "et", "et-EE", "eu", "fa", "fi", "fi-FI", "fr", "fr-BE", "fr-CA", "fr-CH", "fr-FR", "ga", "gd", "gl", "he", "hi", "hr", "hu", "hu-HU", "id", "id-ID", "is", "it", "it-CH", "it-IT", "ja", "ja-JP", "kn", "ko", "ko-KR", "lt", "lv", "ml", "mr", "nb", "nb-NO", "nl", "nl-BE", "nl-NL", "pl", "pl-PL", "pt", "pt-BR", "pt-PT", "ro", "ro-RO", "ru", "ru-RU", "sk", "sl", "sq", "sv", "sv-SE", "ta", "te", "th", "th-TH", "tr", "tr-TR", "uk", "ur", "vi", "vi-VN", "zh", "zh-CN", "zh-HK", "zh-TW"]
 		},
 		"en-US",
 	)
 	.field(
-		"safesearch",
+		"safeSearch",
 		"select",
 		{
-			displayName: "SafeSearch",
+			displayName: "Safe Search",
 			hint: "The level of safety to apply to the search results.",
 			options: ["Off", "Moderate", "Strict"],
 		},
@@ -66,22 +71,16 @@ export const configSchema = createConfigSchematics()
 export async function toolsProvider(ctl: ToolsProviderController) {
 	return [
 		tool({
-			name: `search`,
-			description: `Searches the web using SearXNG, supports searching for webpages, images,
-videos, news, and music.
+			name: `Search`,
+			description: `Searches the web using SearXNG, supports searching for webpages, images, videos, news, and music.
 
 Parameters:
 - query: The search query to use as a string.
-- categories: An array of string categories to search in. Must be one of the
-following: general, images, videos, news, and music.
-- page: The page number to search on. Start off at 1 and increment if desired results are not
-found.
+- categories: An array of string categories to search in. Must be one of the following: general, images, videos, news, and music.
 
 Suggestions:
-- IMPORTANT: After searching do not respond just based on the content summary and instead use the
-visit tool to get the full content of the page.
-- If your first search does not yield the desired results, try making multiple searches with
-different queries to ensure the results are accurate.`,
+- IMPORTANT: After searching do not respond just based on the content summary, instead use the \`Visit\` tool to get the full content of the page to ensure the result is accurate.
+- If your first search does not yield the desired results, try making multiple searches with different queries to try to find the desired results.`,
 			parameters: {
 				query: z.string(),
 				categories: z
@@ -96,12 +95,12 @@ different queries to ensure the results are accurate.`,
 					)
 					.optional()
 					.default(["general"]),
-				page: z.number().min(1).optional().default(1),
+				// page: z.number().min(1).optional().default(1),
 			},
-			implementation: async ({ query, categories, page }) => {
+			implementation: async ({ query, categories }) => {
 				const config = ctl.getPluginConfig(configSchema);
 
-				const safeSearchValue = config.get("safesearch");
+				const safeSearchValue = config.get("safeSearch");
 				const safeSearch: number =
 					safeSearchValue === "Moderate"
 						? 1
@@ -109,7 +108,7 @@ different queries to ensure the results are accurate.`,
 							? 2
 							: 0;
 
-				const baseURLValue = config.get("baseURL");
+				const baseURLValue = config.get("baseSearchURL");
 				const url = new URL(baseURLValue);
 
 				url.searchParams.append("q", query);
@@ -119,7 +118,7 @@ different queries to ensure the results are accurate.`,
 					config.get("engines").join(","),
 				);
 				url.searchParams.append("language", config.get("language"));
-				url.searchParams.append("pageno", page.toString());
+				// url.searchParams.append("pageno", page.toString());
 				url.searchParams.append("format", "json");
 				url.searchParams.append("safesearch", safeSearch.toString());
 
@@ -146,14 +145,16 @@ different queries to ensure the results are accurate.`,
 			},
 		}),
 		tool({
-			name: "visit",
+			name: "Visit",
 			description: `Visits a URL and returns the main text content of the page.
 
 Parameters:
-- url: The URL of the website to visit..
-- returnRaw (optional): Whether to return the raw HTML content of the page. If this is false it returns only
-the main text content of the page. This parameter should only be used in cases where the tool
-misidentifies the main content.`,
+- url: The URL to visit.
+- returnRaw (optional): Whether to return the raw HTML content of the page. If this is false it returns only the main text content of the page.
+
+Suggestions:
+- if returnRaw was set to false and the returned text appears to be wrong, try setting returnRaw to true to get the raw HTML content which may include information wrongly stripped during parsing.
+`,
 			parameters: {
 				url: z.string().url(),
 				returnRaw: z.boolean().optional().default(false),
