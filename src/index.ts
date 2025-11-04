@@ -1,5 +1,3 @@
-// this very well could be least developer friendly sdk ive used
-
 import {
 	createConfigSchematics,
 	PluginContext,
