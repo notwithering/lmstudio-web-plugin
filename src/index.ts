@@ -56,7 +56,7 @@ export const configSchema = createConfigSchematics()
 					displayName: "Engines",
 					hint: "The engines to search in.",
 				},
-				["google", "bing", "wikipedia"],
+				["google", "duckduckgo", "wikipedia"],
 			)
 			.field(
 				"safeSearch",
@@ -320,13 +320,17 @@ export async function toolsProvider(ctl: ToolsProviderController) {
 # Response
 if returnRaw is false:
 	- a json object with the following fields:
-		- title: Article title
-		- content: Article content
-		- excerpt: Article excerpt
-		- byline: Byline of the article
-		- siteName: The website name
-		- lang: Article language
-		- publishedTime: Article published time
+		- request: request information:
+			- url: The URL that was visited
+			- status: HTTP status message of the response
+		- article: article information:
+			- content: Article content
+			- title: Article title
+			- excerpt: Article excerpt
+			- byline: Byline of the article
+			- siteName: The website name
+			- lang: Article language
+			- publishedTime: Article published time
 if returnRaw is true:
 	- the raw HTML content of the page
 
@@ -374,13 +378,19 @@ if returnRaw is true:
 				}
 
 				return {
-					title: article.title,
-					content: cleanText,
-					excerpt: article.excerpt,
-					byline: article.byline,
-					siteName: article.siteName,
-					lang: article.lang,
-					publishedTime: article.publishedTime,
+					request: {
+						url: url,
+						status: response.statusText,
+					},
+					article: {
+						content: cleanText,
+						title: article.title,
+						excerpt: article.excerpt,
+						byline: article.byline,
+						siteName: article.siteName,
+						lang: article.lang,
+						publishedTime: article.publishedTime,
+					},
 				};
 			},
 		}),
