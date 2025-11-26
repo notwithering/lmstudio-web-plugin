@@ -1,0 +1,1 @@
+- make `Visit` tool use rag retrieval instead of dumping article into the model fucking the context length
