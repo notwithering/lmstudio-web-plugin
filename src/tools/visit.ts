@@ -35,7 +35,6 @@ export async function config(config: lms.ConfigSchematicsBuilder<{}>) {
 
 const Params = {
 	url: zod.string().url(),
-	returnRaw: zod.boolean().optional().default(false),
 };
 
 export async function tool(
@@ -48,7 +47,6 @@ export async function tool(
 
 # Parameters
 - url: The URL to visit.
-- returnRaw (optional): Whether to return the raw HTML content of the page. If this is false it returns only the main text content of the page.
 
 # Response
 if returnRaw is false:
@@ -72,11 +70,11 @@ if returnRaw is true:
 - If the returned text appears to be HTML, but you don't recall setting returnRaw to true, it is very likely that the user decided to force the tool to return HTML, so you should try to parse as it is.
 `,
 		parameters: Params,
-		implementation: async ({ url, returnRaw }) => {
+		implementation: async ({ url }) => {
 			const resp = await utils.safeFetch(url);
 			const html = await resp.text();
 
-			if (returnRaw || config.get("visit.forceRaw")) {
+			if (config.get("visit.forceRaw")) {
 				return html;
 			}
 
