@@ -9,7 +9,7 @@ a plugin that allows ais to:
 
 go to [the page on lmstudio hub](https://lmstudio.ai/withering/web) and press the run in lm studio to install
 
-make sure you allow the json format in your `settings.yml` file in `/usr/local/searxng-docker/searxng/` or wherever yours is or else it will give a 403 forbidden error
+make sure you allow the json format in your `settings.yml` file in `/usr/local/searxng-docker/searxng/` or `/etc/searxng` wherever yours is or else it will give a 403 forbidden error
 
 ```yml
 search:
